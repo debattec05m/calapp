@@ -2,7 +2,7 @@
   "name": "30-Day Calisthenics Challenge",
   "short_name": "30 Day Fit",
   "description": "Build Muscle & Get Ripped - No Equipment Needed",
-  "start_url": "/",
+  "start_url": ".",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#000000",

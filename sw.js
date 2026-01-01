@@ -1,10 +1,10 @@
-const CACHE_NAME = 'calisthenics-challenge-v1';
+const CACHE_NAME = 'calisthenics-challenge-v2';
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png'
+  './',
+  './index.html',
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png'
 ];
 
 // Install event - cache files
@@ -61,7 +61,7 @@ self.addEventListener('fetch', event => {
       })
       .catch(() => {
         // Offline fallback
-        return caches.match('/index.html');
+        return caches.match('./index.html');
       })
   );
 });
