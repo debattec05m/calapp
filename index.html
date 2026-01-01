@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="30 Day Challenge">
+  <meta name="theme-color" content="#000000">
+  <meta name="description" content="30-Day Calisthenics Challenge - Build Muscle & Get Ripped">
+  
+  <title>30-Day Calisthenics Challenge</title>
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json">
+  
+  <!-- Apple Touch Icons -->
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icon-192.png">
+  <link rel="apple-touch-icon" sizes="167x167" href="icon-192.png">
+  
+  <!-- Splash Screens for iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <style>
+    * {
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+    }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #000;
+      overscroll-behavior: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    
+    /* Safe area padding for notched iPhones */
+    .safe-top { padding-top: env(safe-area-inset-top); }
+    .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+    
+    /* Custom scrollbar */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: #18181b; }
+    ::-webkit-scrollbar-thumb { background: #f59e0b; border-radius: 2px; }
+    
+    /* Smooth scroll */
+    html { scroll-behavior: smooth; }
+    
+    /* Loading animation */
+    .loader {
+      width: 48px;
+      height: 48px;
+      border: 4px solid #f59e0b;
+      border-bottom-color: transparent;
+      border-radius: 50%;
+      animation: rotation 1s linear infinite;
+    }
+    @keyframes rotation {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    /* Pulse animation for complete button */
+    @keyframes pulse-amber {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+      50% { box-shadow: 0 0 0 12px rgba(245, 158, 11, 0); }
+    }
+    .pulse-amber { animation: pulse-amber 2s infinite; }
+  </style>
+</head>
+<body class="bg-black text-white min-h-screen safe-top">
+  <div id="root">
+    <!-- Loading State -->
+    <div class="min-h-screen flex flex-col items-center justify-center">
+      <div class="loader mb-4"></div>
+      <p class="text-zinc-400">Loading Challenge...</p>
+    </div>
+  </div>
+
+  <!-- React & ReactDOM -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // 30-Day Calisthenics Challenge Data
+    const challengeData = {
+      title: "30-Day Calisthenics Challenge",
+      subtitle: "Build Muscle & Get Ripped - No Equipment Needed",
+      
+      exercises: {
+        pushups: { name: "Push-Ups", target: "Chest, Shoulders, Triceps", link: "https://www.youtube.com/watch?v=IODxDxX7oi4", icon: "💪" },
+        widePushups: { name: "Wide Push-Ups", target: "Chest (outer)", link: "https://www.youtube.com/watch?v=pfPvbG5Ihtk", icon: "🔥" },
+        diamondPushups: { name: "Diamond Push-Ups", target: "Triceps, Inner Chest", link: "https://www.youtube.com/watch?v=J0DnG1_S92I", icon: "💎" },
+        pikePushups: { name: "Pike Push-Ups", target: "Shoulders, Upper Chest", link: "https://www.youtube.com/watch?v=sposDXWEB0A", icon: "⛰️" },
+        declinePushups: { name: "Decline Push-Ups", target: "Upper Chest, Shoulders", link: "https://www.youtube.com/watch?v=SKPab2YC8BE", icon: "📐" },
+        archerPushups: { name: "Archer Push-Ups", target: "Chest, Single-arm strength", link: "https://www.youtube.com/watch?v=LcJXgxqOZBc", icon: "🏹" },
+        supermanPulls: { name: "Superman Pulls", target: "Back, Rear Delts", link: "https://www.youtube.com/watch?v=cc6UVRS7PW4", icon: "🦸" },
+        reverseSnowAngels: { name: "Reverse Snow Angels", target: "Upper Back, Rear Delts", link: "https://www.youtube.com/watch?v=B0hLmXwSv-I", icon: "👼" },
+        plank: { name: "Plank", target: "Core, Stabilizers", link: "https://www.youtube.com/watch?v=pvIjsG5Svck", icon: "🧱" },
+        sidePlank: { name: "Side Plank", target: "Obliques, Core", link: "https://www.youtube.com/watch?v=K2VljzCC16g", icon: "📏" },
+        mountainClimbers: { name: "Mountain Climbers", target: "Core, Cardio", link: "https://www.youtube.com/watch?v=nmwgirgXLYM", icon: "🧗" },
+        legRaises: { name: "Lying Leg Raises", target: "Lower Abs", link: "https://www.youtube.com/watch?v=l4kQd9eWclE", icon: "🦵" },
+        bicycleCrunches: { name: "Bicycle Crunches", target: "Abs, Obliques", link: "https://www.youtube.com/watch?v=9FGilxCbdz8", icon: "🚴" },
+        deadBug: { name: "Dead Bug", target: "Core Stability", link: "https://www.youtube.com/watch?v=4XLEnwUr1d8", icon: "🐛" },
+        vUps: { name: "V-Ups", target: "Full Core", link: "https://www.youtube.com/watch?v=iP2fjvG0g3w", icon: "✌️" },
+        squats: { name: "Bodyweight Squats", target: "Quads, Glutes", link: "https://www.youtube.com/watch?v=aclHkVaku9U", icon: "🏋️" },
+        lunges: { name: "Forward Lunges", target: "Quads, Glutes, Balance", link: "https://www.youtube.com/watch?v=QOVaHwm-Q6U", icon: "🚶" },
+        jumpSquats: { name: "Jump Squats", target: "Quads, Power", link: "https://www.youtube.com/watch?v=A-cFYWvaHr0", icon: "🦘" },
+        sumoSquats: { name: "Sumo Squats", target: "Inner Thighs, Glutes", link: "https://www.youtube.com/watch?v=9ZuXKqRbT9k", icon: "🤼" },
+        bulgarianSplitSquats: { name: "Bulgarian Split Squats", target: "Quads, Glutes, Balance", link: "https://www.youtube.com/watch?v=2C-uNgKwPLE", icon: "🇧🇬" },
+        calfRaises: { name: "Standing Calf Raises", target: "Calves", link: "https://www.youtube.com/watch?v=-M4-G8p8fmc", icon: "🦶" },
+        gluteBridges: { name: "Glute Bridges", target: "Glutes, Hamstrings", link: "https://www.youtube.com/watch?v=OUgsJ8-Vi0E", icon: "🌉" },
+        wallSit: { name: "Wall Sit", target: "Quads, Endurance", link: "https://www.youtube.com/watch?v=y-wV4Venusw", icon: "🧱" },
+        burpees: { name: "Burpees", target: "Full Body, Cardio", link: "https://www.youtube.com/watch?v=dZgVxmf6jkA", icon: "💥" },
+        highKnees: { name: "High Knees", target: "Cardio, Core", link: "https://www.youtube.com/watch?v=oDdkytliOqE", icon: "🏃" },
+        jumpingJacks: { name: "Jumping Jacks", target: "Cardio, Warm-up", link: "https://www.youtube.com/watch?v=c4DAnQ6DtF8", icon: "⭐" },
+        benchDips: { name: "Bench/Chair Dips", target: "Triceps, Chest", link: "https://www.youtube.com/watch?v=6kALZikXxLc", icon: "🪑" }
+      },
+      
+      days: [
+        // WEEK 1
+        { day: 1, title: "Upper Body Foundation", focus: "Push & Core Basics", type: "strength", warmup: "5 min jumping jacks + arm circles", exercises: [{ id: "pushups", sets: 3, reps: "8-10" }, { id: "widePushups", sets: 2, reps: "8" }, { id: "plank", sets: 3, reps: "30 sec" }, { id: "supermanPulls", sets: 3, reps: "12" }, { id: "benchDips", sets: 3, reps: "10" }], cooldown: "5 min stretching" },
+        { day: 2, title: "Lower Body Power", focus: "Legs & Glutes", type: "strength", warmup: "5 min high knees + leg swings", exercises: [{ id: "squats", sets: 4, reps: "15" }, { id: "lunges", sets: 3, reps: "10 each leg" }, { id: "gluteBridges", sets: 3, reps: "15" }, { id: "calfRaises", sets: 3, reps: "20" }, { id: "wallSit", sets: 3, reps: "30 sec" }], cooldown: "5 min hip & leg stretches" },
+        { day: 3, title: "Active Recovery", focus: "Light Movement & Mobility", type: "recovery", warmup: "5 min easy walk", exercises: [{ id: "deadBug", sets: 2, reps: "10 each side" }, { id: "gluteBridges", sets: 2, reps: "10" }, { id: "plank", sets: 2, reps: "20 sec" }], cooldown: "10 min full body stretch" },
+        { day: 4, title: "Push Focus", focus: "Chest & Triceps", type: "strength", warmup: "5 min arm circles + light pushups", exercises: [{ id: "pushups", sets: 4, reps: "10" }, { id: "diamondPushups", sets: 3, reps: "6-8" }, { id: "benchDips", sets: 3, reps: "12" }, { id: "pikePushups", sets: 3, reps: "8" }, { id: "plank", sets: 3, reps: "40 sec" }], cooldown: "5 min chest & shoulder stretch" },
+        { day: 5, title: "Lower Body & Core", focus: "Legs & Abs", type: "strength", warmup: "5 min jumping jacks", exercises: [{ id: "squats", sets: 4, reps: "15" }, { id: "sumoSquats", sets: 3, reps: "12" }, { id: "legRaises", sets: 3, reps: "12" }, { id: "bicycleCrunches", sets: 3, reps: "20" }, { id: "calfRaises", sets: 3, reps: "20" }], cooldown: "5 min stretching" },
+        { day: 6, title: "Full Body Circuit", focus: "Cardio & Conditioning", type: "hiit", warmup: "5 min light jog in place", exercises: [{ id: "burpees", sets: 3, reps: "8" }, { id: "mountainClimbers", sets: 3, reps: "30 sec" }, { id: "jumpSquats", sets: 3, reps: "10" }, { id: "highKnees", sets: 3, reps: "30 sec" }, { id: "pushups", sets: 3, reps: "10" }], cooldown: "5 min walking + stretch" },
+        { day: 7, title: "Rest Day", focus: "Full Recovery", type: "rest", warmup: "Optional: 10 min walk", exercises: [], cooldown: "Light stretching if desired" },
+        // WEEK 2
+        { day: 8, title: "Upper Push Progression", focus: "Chest & Shoulders", type: "strength", warmup: "5 min dynamic warm-up", exercises: [{ id: "pushups", sets: 4, reps: "12" }, { id: "widePushups", sets: 3, reps: "10" }, { id: "pikePushups", sets: 3, reps: "10" }, { id: "benchDips", sets: 4, reps: "12" }, { id: "supermanPulls", sets: 3, reps: "15" }], cooldown: "5 min stretching" },
+        { day: 9, title: "Leg Day Intensity", focus: "Quads & Glutes Power", type: "strength", warmup: "5 min leg swings + squats", exercises: [{ id: "squats", sets: 4, reps: "20" }, { id: "lunges", sets: 4, reps: "12 each leg" }, { id: "bulgarianSplitSquats", sets: 3, reps: "8 each leg" }, { id: "gluteBridges", sets: 4, reps: "15" }, { id: "calfRaises", sets: 4, reps: "25" }], cooldown: "5 min hip stretches" },
+        { day: 10, title: "Core Destroyer", focus: "Abs & Stability", type: "strength", warmup: "5 min light cardio", exercises: [{ id: "plank", sets: 4, reps: "45 sec" }, { id: "sidePlank", sets: 3, reps: "30 sec each" }, { id: "legRaises", sets: 4, reps: "15" }, { id: "bicycleCrunches", sets: 3, reps: "30" }, { id: "vUps", sets: 3, reps: "12" }], cooldown: "5 min core stretch" },
+        { day: 11, title: "Push & Pull Balance", focus: "Full Upper Body", type: "strength", warmup: "5 min arm circles + light pushups", exercises: [{ id: "pushups", sets: 4, reps: "12" }, { id: "diamondPushups", sets: 3, reps: "10" }, { id: "supermanPulls", sets: 4, reps: "15" }, { id: "reverseSnowAngels", sets: 3, reps: "12" }, { id: "benchDips", sets: 4, reps: "15" }], cooldown: "5 min full upper stretch" },
+        { day: 12, title: "Leg Endurance", focus: "High Rep Lower Body", type: "strength", warmup: "5 min jumping jacks", exercises: [{ id: "squats", sets: 5, reps: "20" }, { id: "sumoSquats", sets: 4, reps: "15" }, { id: "lunges", sets: 3, reps: "15 each leg" }, { id: "wallSit", sets: 3, reps: "45 sec" }, { id: "calfRaises", sets: 4, reps: "30" }], cooldown: "5 min leg stretches" },
+        { day: 13, title: "HIIT Blast", focus: "Fat Burning Circuit", type: "hiit", warmup: "5 min light jog", exercises: [{ id: "burpees", sets: 4, reps: "10" }, { id: "jumpSquats", sets: 4, reps: "12" }, { id: "mountainClimbers", sets: 4, reps: "40 sec" }, { id: "highKnees", sets: 4, reps: "40 sec" }, { id: "pushups", sets: 4, reps: "15" }], cooldown: "5 min cool down walk" },
+        { day: 14, title: "Rest & Reflect", focus: "Recovery", type: "rest", warmup: "Optional: light walk", exercises: [], cooldown: "Full body stretch routine" },
+        // WEEK 3
+        { day: 15, title: "Advanced Push", focus: "Chest & Triceps Volume", type: "strength", warmup: "5 min dynamic upper body", exercises: [{ id: "pushups", sets: 5, reps: "15" }, { id: "declinePushups", sets: 4, reps: "12" }, { id: "diamondPushups", sets: 4, reps: "12" }, { id: "pikePushups", sets: 4, reps: "12" }, { id: "benchDips", sets: 4, reps: "15" }], cooldown: "5 min stretch" },
+        { day: 16, title: "Leg Power Day", focus: "Explosive Lower Body", type: "strength", warmup: "5 min leg warm-up", exercises: [{ id: "jumpSquats", sets: 4, reps: "12" }, { id: "bulgarianSplitSquats", sets: 4, reps: "10 each" }, { id: "lunges", sets: 4, reps: "12 each" }, { id: "gluteBridges", sets: 4, reps: "20" }, { id: "calfRaises", sets: 4, reps: "30" }], cooldown: "5 min stretch" },
+        { day: 17, title: "Core Shred", focus: "Ab Definition", type: "strength", warmup: "5 min cardio", exercises: [{ id: "plank", sets: 4, reps: "60 sec" }, { id: "sidePlank", sets: 4, reps: "40 sec each" }, { id: "vUps", sets: 4, reps: "15" }, { id: "legRaises", sets: 4, reps: "15" }, { id: "mountainClimbers", sets: 4, reps: "40 sec" }], cooldown: "5 min core stretch" },
+        { day: 18, title: "Upper Volume", focus: "Muscle Building Push/Pull", type: "strength", warmup: "5 min arm circles", exercises: [{ id: "pushups", sets: 5, reps: "15" }, { id: "archerPushups", sets: 3, reps: "6 each side" }, { id: "supermanPulls", sets: 4, reps: "15" }, { id: "reverseSnowAngels", sets: 4, reps: "15" }, { id: "benchDips", sets: 4, reps: "15" }], cooldown: "5 min stretch" },
+        { day: 19, title: "Leg Hypertrophy", focus: "Time Under Tension", type: "strength", warmup: "5 min leg swings", exercises: [{ id: "squats", sets: 5, reps: "15 (3 sec down)" }, { id: "sumoSquats", sets: 4, reps: "15" }, { id: "bulgarianSplitSquats", sets: 4, reps: "12 each" }, { id: "wallSit", sets: 4, reps: "60 sec" }, { id: "calfRaises", sets: 4, reps: "25" }], cooldown: "5 min stretch" },
+        { day: 20, title: "HIIT Mayhem", focus: "Maximum Burn", type: "hiit", warmup: "5 min jog", exercises: [{ id: "burpees", sets: 5, reps: "12" }, { id: "jumpSquats", sets: 5, reps: "15" }, { id: "mountainClimbers", sets: 5, reps: "45 sec" }, { id: "highKnees", sets: 5, reps: "45 sec" }, { id: "pushups", sets: 5, reps: "15" }], cooldown: "5 min walk + stretch" },
+        { day: 21, title: "Active Recovery", focus: "Light Movement", type: "recovery", warmup: "10 min easy walk", exercises: [{ id: "deadBug", sets: 2, reps: "10 each" }, { id: "gluteBridges", sets: 2, reps: "12" }, { id: "plank", sets: 2, reps: "30 sec" }], cooldown: "15 min full stretch" },
+        // WEEK 4
+        { day: 22, title: "Push to the Limit", focus: "Max Chest & Triceps", type: "strength", warmup: "5 min dynamic warm-up", exercises: [{ id: "pushups", sets: 5, reps: "20" }, { id: "declinePushups", sets: 4, reps: "15" }, { id: "archerPushups", sets: 4, reps: "8 each" }, { id: "diamondPushups", sets: 4, reps: "15" }, { id: "benchDips", sets: 5, reps: "20" }], cooldown: "5 min stretch" },
+        { day: 23, title: "Leg Domination", focus: "Complete Lower Body", type: "strength", warmup: "5 min leg warm-up", exercises: [{ id: "squats", sets: 5, reps: "25" }, { id: "jumpSquats", sets: 4, reps: "15" }, { id: "bulgarianSplitSquats", sets: 4, reps: "12 each" }, { id: "lunges", sets: 4, reps: "15 each" }, { id: "gluteBridges", sets: 4, reps: "25" }, { id: "calfRaises", sets: 4, reps: "35" }], cooldown: "5 min stretch" },
+        { day: 24, title: "Core Annihilation", focus: "Ultimate Ab Workout", type: "strength", warmup: "5 min cardio", exercises: [{ id: "plank", sets: 4, reps: "75 sec" }, { id: "sidePlank", sets: 4, reps: "45 sec each" }, { id: "vUps", sets: 5, reps: "20" }, { id: "bicycleCrunches", sets: 5, reps: "40" }, { id: "legRaises", sets: 5, reps: "20" }], cooldown: "5 min stretch" },
+        { day: 25, title: "Full Upper Assault", focus: "Volume Training", type: "strength", warmup: "5 min warm-up", exercises: [{ id: "pushups", sets: 5, reps: "20" }, { id: "widePushups", sets: 4, reps: "15" }, { id: "pikePushups", sets: 4, reps: "15" }, { id: "supermanPulls", sets: 5, reps: "20" }, { id: "benchDips", sets: 5, reps: "20" }], cooldown: "5 min stretch" },
+        { day: 26, title: "Leg Burnout", focus: "Endurance & Strength", type: "strength", warmup: "5 min jog in place", exercises: [{ id: "squats", sets: 5, reps: "25" }, { id: "sumoSquats", sets: 5, reps: "20" }, { id: "lunges", sets: 4, reps: "15 each" }, { id: "wallSit", sets: 4, reps: "75 sec" }, { id: "calfRaises", sets: 5, reps: "40" }], cooldown: "5 min stretch" },
+        { day: 27, title: "Ultimate HIIT", focus: "Peak Conditioning", type: "hiit", warmup: "5 min light cardio", exercises: [{ id: "burpees", sets: 5, reps: "15" }, { id: "jumpSquats", sets: 5, reps: "20" }, { id: "mountainClimbers", sets: 5, reps: "60 sec" }, { id: "highKnees", sets: 5, reps: "60 sec" }, { id: "pushups", sets: 5, reps: "20" }], cooldown: "5 min walk + stretch" },
+        { day: 28, title: "Rest Before Final", focus: "Recovery", type: "rest", warmup: "Optional light walk", exercises: [], cooldown: "Full body mobility" },
+        { day: 29, title: "Full Body Gauntlet", focus: "Ultimate Test", type: "strength", warmup: "5 min full warm-up", exercises: [{ id: "pushups", sets: 5, reps: "25" }, { id: "squats", sets: 5, reps: "30" }, { id: "diamondPushups", sets: 4, reps: "15" }, { id: "lunges", sets: 4, reps: "15 each" }, { id: "plank", sets: 4, reps: "60 sec" }, { id: "benchDips", sets: 4, reps: "20" }], cooldown: "5 min stretch" },
+        { day: 30, title: "Champion Finisher", focus: "Celebration Workout", type: "hiit", warmup: "5 min dynamic warm-up", exercises: [{ id: "burpees", sets: 3, reps: "15" }, { id: "pushups", sets: 3, reps: "30" }, { id: "squats", sets: 3, reps: "30" }, { id: "jumpSquats", sets: 3, reps: "20" }, { id: "plank", sets: 3, reps: "60 sec" }, { id: "mountainClimbers", sets: 3, reps: "45 sec" }], cooldown: "10 min celebration stretch!" }
+      ]
+    };
+
+    // Main App Component
+    function App() {
+      const [progress, setProgress] = useState({});
+      const [selectedDay, setSelectedDay] = useState(null);
+      const [view, setView] = useState('calendar');
+      const [isLoaded, setIsLoaded] = useState(false);
+      
+      useEffect(() => {
+        try {
+          const saved = localStorage.getItem('calisthenics_progress_v2');
+          if (saved) setProgress(JSON.parse(saved));
+        } catch (e) { console.error('Load error:', e); }
+        setIsLoaded(true);
+      }, []);
+      
+      useEffect(() => {
+        if (isLoaded) {
+          try {
+            localStorage.setItem('calisthenics_progress_v2', JSON.stringify(progress));
+          } catch (e) { console.error('Save error:', e); }
+        }
+      }, [progress, isLoaded]);
+      
+      const toggleDayComplete = (day) => {
+        setProgress(prev => ({
+          ...prev,
+          [day]: { ...prev[day], completed: !prev[day]?.completed, completedDate: !prev[day]?.completed ? new Date().toISOString() : null }
+        }));
+      };
+      
+      const toggleExercise = (day, idx) => {
+        setProgress(prev => {
+          const dayProgress = prev[day] || { exercises: {} };
+          return { ...prev, [day]: { ...dayProgress, exercises: { ...dayProgress.exercises, [`ex_${idx}`]: !dayProgress.exercises?.[`ex_${idx}`] } } };
+        });
+      };
+      
+      const addNote = (day, note) => {
+        setProgress(prev => ({ ...prev, [day]: { ...prev[day], note } }));
+      };
+      
+      const completedDays = Object.values(progress).filter(p => p?.completed).length;
+      const totalWorkoutDays = challengeData.days.filter(d => d.type !== 'rest').length;
+      
+      const getTypeColor = (type) => {
+        const colors = { strength: 'from-amber-500 to-orange-600', hiit: 'from-red-500 to-pink-600', recovery: 'from-emerald-400 to-teal-500', rest: 'from-slate-400 to-slate-500' };
+        return colors[type] || colors.strength;
+      };
+      
+      const getTypeBadge = (type) => {
+        const badges = { strength: '💪 STRENGTH', hiit: '🔥 HIIT', recovery: '🧘 RECOVERY', rest: '😴 REST' };
+        return badges[type] || type.toUpperCase();
+      };
+      
+      const calculateStreak = () => {
+        let streak = 0;
+        for (let i = 30; i >= 1; i--) {
+          if (challengeData.days[i-1].type === 'rest') continue;
+          if (progress[i]?.completed) streak++; else break;
+        }
+        return streak;
+      };
+
+      // Calendar View
+      const CalendarView = () => (
+        <div className="space-y-6">
+          <div className="bg-gradient-to-br from-zinc-900 to-zinc-800 rounded-2xl p-5 border border-zinc-700/50">
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-zinc-400 font-semibold tracking-wide text-sm">CHALLENGE PROGRESS</span>
+              <span className="text-amber-400 font-black text-2xl">{completedDays}/{totalWorkoutDays}</span>
+            </div>
+            <div className="h-4 bg-zinc-800 rounded-full overflow-hidden border border-zinc-700">
+              <div className="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 transition-all duration-500 rounded-full" style={{ width: `${(completedDays / totalWorkoutDays) * 100}%` }} />
+            </div>
+            <p className="text-zinc-500 mt-2 text-sm">{completedDays === totalWorkoutDays ? "🏆 CHALLENGE COMPLETE!" : `${totalWorkoutDays - completedDays} workout days remaining`}</p>
+          </div>
+          
+          {[0, 1, 2, 3].map(week => (
+            <div key={week} className="space-y-3">
+              <h3 className="text-zinc-500 font-bold tracking-widest text-xs flex items-center gap-2">
+                <span className="h-px bg-zinc-800 flex-1" />WEEK {week + 1}<span className="h-px bg-zinc-800 flex-1" />
+              </h3>
+              <div className="grid grid-cols-7 gap-2">
+                {challengeData.days.slice(week * 7, (week + 1) * 7).map(day => {
+                  const isCompleted = progress[day.day]?.completed;
+                  return (
+                    <button key={day.day} onClick={() => { setSelectedDay(day.day); setView('day'); }}
+                      className={`relative aspect-square rounded-xl p-1 flex flex-col items-center justify-center transition-all duration-200 active:scale-95 border-2
+                        ${isCompleted ? 'bg-gradient-to-br from-amber-500/20 to-orange-500/20 border-amber-500/50' : 'bg-zinc-800/50 border-zinc-700/30'}`}>
+                      <span className={`font-black text-lg ${isCompleted ? 'text-amber-400' : 'text-white'}`}>{day.day}</span>
+                      <span className="text-xs">{day.type === 'rest' ? '😴' : day.type === 'recovery' ? '🧘' : day.type === 'hiit' ? '🔥' : '💪'}</span>
+                      {isCompleted && <span className="absolute -top-1 -right-1 text-green-400 text-sm">✓</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+          
+          <div className="grid grid-cols-3 gap-3">
+            {[{ label: 'Completed', value: completedDays, icon: '✓' }, { label: 'Streak', value: calculateStreak(), icon: '🔥' }, { label: 'Remaining', value: totalWorkoutDays - completedDays, icon: '📊' }].map(stat => (
+              <div key={stat.label} className="bg-zinc-800/50 rounded-xl p-3 text-center border border-zinc-700/30">
+                <span className="text-xl">{stat.icon}</span>
+                <p className="text-xl font-black text-white">{stat.value}</p>
+                <p className="text-zinc-500 text-xs uppercase tracking-wider">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+
+      // Day View
+      const DayView = () => {
+        const day = challengeData.days.find(d => d.day === selectedDay);
+        if (!day) return null;
+        const dayProgress = progress[selectedDay] || { exercises: {} };
+        
+        return (
+          <div className="space-y-4">
+            <div className={`rounded-2xl p-5 bg-gradient-to-br ${getTypeColor(day.type)} relative overflow-hidden`}>
+              <div className="absolute top-0 right-0 opacity-10 text-8xl font-black">{day.day}</div>
+              <button onClick={() => setView('calendar')} className="flex items-center gap-2 text-white/80 mb-3 text-sm">← Back</button>
+              <span className="bg-black/20 text-white text-xs font-bold px-3 py-1 rounded-full">{getTypeBadge(day.type)}</span>
+              <h2 className="text-2xl font-black text-white mt-2">{day.title}</h2>
+              <p className="text-white/80">{day.focus}</p>
+            </div>
+            
+            {day.warmup && (
+              <div className="bg-zinc-800/50 rounded-xl p-4 border border-zinc-700/30">
+                <h4 className="text-amber-400 font-bold text-sm mb-1">🔥 WARM-UP</h4>
+                <p className="text-white text-sm">{day.warmup}</p>
+              </div>
+            )}
+            
+            {day.exercises.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="text-zinc-500 font-bold text-xs tracking-wider px-1">EXERCISES</h4>
+                {day.exercises.map((exercise, idx) => {
+                  const info = challengeData.exercises[exercise.id];
+                  const isChecked = dayProgress.exercises?.[`ex_${idx}`];
+                  return (
+                    <div key={idx} className={`rounded-xl p-3 transition-all ${isChecked ? 'bg-amber-500/10 border-amber-500/30' : 'bg-zinc-800/50 border-zinc-700/30'} border`}>
+                      <div className="flex items-start gap-3">
+                        <button onClick={() => toggleExercise(selectedDay, idx)}
+                          className={`mt-1 w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 ${isChecked ? 'bg-amber-500 border-amber-500 text-black' : 'border-zinc-600'}`}>
+                          {isChecked && <span className="text-sm font-bold">✓</span>}
+                        </button>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span>{info.icon}</span>
+                            <h5 className={`font-bold text-sm ${isChecked ? 'text-amber-400' : 'text-white'}`}>{info.name}</h5>
+                          </div>
+                          <p className="text-zinc-500 text-xs">{info.target}</p>
+                          <div className="flex gap-2 mt-1">
+                            <span className="bg-zinc-700/50 text-white text-xs px-2 py-0.5 rounded">{exercise.sets} sets</span>
+                            <span className="bg-zinc-700/50 text-white text-xs px-2 py-0.5 rounded">{exercise.reps}</span>
+                          </div>
+                        </div>
+                        <a href={info.link} target="_blank" rel="noopener noreferrer" className="text-amber-400 text-xs bg-amber-500/10 px-2 py-1 rounded-lg">📹</a>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            
+            {day.type === 'rest' && day.exercises.length === 0 && (
+              <div className="bg-zinc-800/50 rounded-xl p-8 text-center border border-zinc-700/30">
+                <span className="text-5xl mb-3 block">😴</span>
+                <h4 className="text-white text-lg font-bold mb-1">Rest Day!</h4>
+                <p className="text-zinc-400 text-sm">Recovery is when muscles grow!</p>
+              </div>
+            )}
+            
+            {day.cooldown && (
+              <div className="bg-zinc-800/50 rounded-xl p-4 border border-zinc-700/30">
+                <h4 className="text-emerald-400 font-bold text-sm mb-1">🧊 COOL-DOWN</h4>
+                <p className="text-white text-sm">{day.cooldown}</p>
+              </div>
+            )}
+            
+            <div className="bg-zinc-800/50 rounded-xl p-4 border border-zinc-700/30">
+              <h4 className="text-zinc-500 font-bold text-xs tracking-wider mb-2">📝 NOTES</h4>
+              <textarea value={dayProgress.note || ''} onChange={(e) => addNote(selectedDay, e.target.value)}
+                placeholder="How did you feel? Track your progress..."
+                className="w-full bg-zinc-900/50 border border-zinc-700 rounded-lg p-3 text-white placeholder-zinc-600 resize-none h-20 text-sm focus:outline-none focus:border-amber-500/50" />
+            </div>
+            
+            <button onClick={() => toggleDayComplete(selectedDay)}
+              className={`w-full py-4 rounded-xl font-bold transition-all ${dayProgress.completed ? 'bg-green-500/20 text-green-400 border-2 border-green-500/50' : 'bg-gradient-to-r from-amber-500 to-orange-500 text-black pulse-amber'}`}>
+              {dayProgress.completed ? '✓ COMPLETED!' : 'MARK DAY COMPLETE'}
+            </button>
+            
+            <div className="flex gap-2">
+              <button onClick={() => setSelectedDay(Math.max(1, selectedDay - 1))} disabled={selectedDay === 1}
+                className="flex-1 py-3 bg-zinc-800 text-white rounded-xl font-medium disabled:opacity-30 text-sm">← Day {selectedDay - 1}</button>
+              <button onClick={() => setSelectedDay(Math.min(30, selectedDay + 1))} disabled={selectedDay === 30}
+                className="flex-1 py-3 bg-zinc-800 text-white rounded-xl font-medium disabled:opacity-30 text-sm">Day {selectedDay + 1} →</button>
+            </div>
+          </div>
+        );
+      };
+
+      // Stats View
+      const StatsView = () => {
+        const strengthDays = challengeData.days.filter(d => d.type === 'strength').length;
+        const hiitDays = challengeData.days.filter(d => d.type === 'hiit').length;
+        const completedStrength = challengeData.days.filter(d => d.type === 'strength' && progress[d.day]?.completed).length;
+        const completedHiit = challengeData.days.filter(d => d.type === 'hiit' && progress[d.day]?.completed).length;
+        
+        return (
+          <div className="space-y-5">
+            <h2 className="text-xl font-black text-white">Your Statistics</h2>
+            
+            <div className="bg-zinc-900 rounded-2xl p-5 border border-zinc-800">
+              <h3 className="text-amber-400 font-bold mb-4 text-sm">OVERALL PROGRESS</h3>
+              <div className="grid grid-cols-2 gap-3">
+                {[{ label: 'Completed', value: completedDays, max: totalWorkoutDays },
+                  { label: 'Rate', value: `${Math.round((completedDays/totalWorkoutDays)*100)}%`, highlight: true },
+                  { label: 'Streak', value: calculateStreak() },
+                  { label: 'Remaining', value: totalWorkoutDays - completedDays }
+                ].map(stat => (
+                  <div key={stat.label} className="bg-zinc-800/50 rounded-xl p-3">
+                    <p className="text-zinc-500 text-xs uppercase">{stat.label}</p>
+                    <p className={`text-xl font-black ${stat.highlight ? 'text-amber-400' : 'text-white'}`}>{stat.value}{stat.max ? `/${stat.max}` : ''}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="bg-zinc-900 rounded-2xl p-5 border border-zinc-800">
+              <h3 className="text-amber-400 font-bold mb-4 text-sm">WORKOUT BREAKDOWN</h3>
+              {[{ type: 'Strength', completed: completedStrength, total: strengthDays, color: 'bg-amber-500' },
+                { type: 'HIIT', completed: completedHiit, total: hiitDays, color: 'bg-red-500' }
+              ].map(item => (
+                <div key={item.type} className="mb-3">
+                  <div className="flex justify-between mb-1">
+                    <span className="text-white text-sm">{item.type}</span>
+                    <span className="text-zinc-400 text-sm">{item.completed}/{item.total}</span>
+                  </div>
+                  <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
+                    <div className={`h-full ${item.color} transition-all`} style={{ width: `${(item.completed/item.total)*100}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <button onClick={() => { if (confirm('Reset all progress?')) setProgress({}); }}
+              className="w-full py-3 bg-red-500/10 text-red-400 border border-red-500/30 rounded-xl text-sm">Reset Progress</button>
+          </div>
+        );
+      };
+
+      if (!isLoaded) return null;
+
+      return (
+        <div className="min-h-screen bg-black text-white">
+          <div className="fixed inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '24px 24px' }} />
+          
+          <div className="relative max-w-lg mx-auto px-4 pt-6 pb-24">
+            <header className="text-center mb-6">
+              <h1 className="text-2xl font-black bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 bg-clip-text text-transparent" style={{ fontFamily: "'Archivo Black', sans-serif" }}>
+                30-DAY CHALLENGE
+              </h1>
+              <p className="text-zinc-500 text-sm">Build Muscle • Get Ripped • No Equipment</p>
+            </header>
+            
+            {view === 'calendar' && <CalendarView />}
+            {view === 'day' && <DayView />}
+            {view === 'stats' && <StatsView />}
+          </div>
+          
+          <nav className="fixed bottom-0 left-0 right-0 bg-zinc-900/95 backdrop-blur-lg border-t border-zinc-800 safe-bottom">
+            <div className="max-w-lg mx-auto flex">
+              {[{ id: 'calendar', label: 'Calendar', icon: '📅' }, { id: 'day', label: 'Today', icon: '🎯' }, { id: 'stats', label: 'Stats', icon: '📊' }].map(tab => (
+                <button key={tab.id} onClick={() => {
+                  if (tab.id === 'day' && !selectedDay) {
+                    const nextDay = challengeData.days.find(d => d.type !== 'rest' && !progress[d.day]?.completed);
+                    setSelectedDay(nextDay?.day || 1);
+                  }
+                  setView(tab.id);
+                }} className={`flex-1 py-4 flex flex-col items-center gap-1 ${view === tab.id ? 'text-amber-400' : 'text-zinc-500'}`}>
+                  <span className="text-xl">{tab.icon}</span>
+                  <span className="text-xs font-bold">{tab.label}</span>
+                </button>
+              ))}
+            </div>
+          </nav>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('SW registered'))
+          .catch(err => console.log('SW registration failed:', err));
+      });
+    }
+  </script>
+</body>
+</html>
